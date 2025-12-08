@@ -77,3 +77,16 @@ Route::middleware(['auth', 'role:admin|staff'])->prefix('admin')->name('admin.')
     Route::post('/tickets/{id}/assign', [AdminTicketController::class, 'assign'])->name('tickets.assign');
     Route::post('/tickets/{id}/update-status', [AdminTicketController::class, 'updateStatus'])->name('tickets.updateStatus');
 });
+
+// Installer Routes (No middleware - accessible before installation)
+Route::prefix('installer')->name('installer.')->group(function () {
+    Route::get('/', [App\Http\Controllers\InstallerController::class, 'index'])->name('index');
+    Route::get('/requirements', [App\Http\Controllers\InstallerController::class, 'requirements'])->name('requirements');
+    Route::get('/database', [App\Http\Controllers\InstallerController::class, 'database'])->name('database');
+    Route::post('/database', [App\Http\Controllers\InstallerController::class, 'databasePost'])->name('database.post');
+    Route::get('/admin', [App\Http\Controllers\InstallerController::class, 'admin'])->name('admin');
+    Route::post('/admin', [App\Http\Controllers\InstallerController::class, 'adminPost'])->name('admin.post');
+    Route::get('/install', [App\Http\Controllers\InstallerController::class, 'install'])->name('install');
+    Route::post('/process', [App\Http\Controllers\InstallerController::class, 'process'])->name('process');
+    Route::get('/complete', [App\Http\Controllers\InstallerController::class, 'complete'])->name('complete');
+});

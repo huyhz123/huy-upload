@@ -18,6 +18,16 @@ use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\CICDDashboardController;
+
+// CI/CD Dashboard Routes (Protected by auth + admin role)
+Route::middleware(['auth', 'role:admin'])->prefix('cicd')->name('cicd.')->group(function () {
+    Route::get('/dashboard', [CICDDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/data', [CICDDashboardController::class, 'getData'])->name('api.data');
+    Route::post('/api/scan', [CICDDashboardController::class, 'triggerScan'])->name('api.scan');
+    Route::get('/api/module/{name}', [CICDDashboardController::class, 'getModuleDetails'])->name('api.module');
+    Route::get('/api/logs', [CICDDashboardController::class, 'getLogs'])->name('api.logs');
+});
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');

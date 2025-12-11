@@ -8,6 +8,9 @@ use App\Services\CICD\ScannerService;
 use App\Services\CICD\AutoFixService;
 use App\Services\CICD\GitService;
 use App\Services\CICD\ReportService;
+use App\Services\CICD\LiveMonitorService;
+use App\Services\CICD\LayoutMergerService;
+use App\Services\CICD\MenuUpdaterService;
 
 class CICDRunCommand extends Command
 {
@@ -57,6 +60,9 @@ class CICDRunCommand extends Command
     {
         $startTime = microtime(true);
 
+        // Step 0: Live Monitor
+        $this->step0LiveMonitor();
+
         // Step 1: Backup
         if (!$this->option('skip-backup')) {
             $this->step1Backup();
@@ -69,6 +75,12 @@ class CICDRunCommand extends Command
 
         // Step 3: Auto-Fix
         $this->step3AutoFix();
+
+        // Step 3.5: Layout & CSS/JS Merger
+        $this->step3HalfLayoutMerger();
+
+        // Step 3.6: Menu Updater
+        $this->step3SixMenuUpdater();
 
         // Step 4: Git Commit & Push
         if (!$this->option('skip-git')) {
@@ -224,6 +236,61 @@ class CICDRunCommand extends Command
             $this->error('✗ Git operations failed: ' . ($result['error'] ?? 'Unknown error'));
         }
 
+        $this->newLine();
+    }
+
+    /**
+     * Step 0: Live Monitor
+     */
+    protected function step0LiveMonitor(): void
+    {
+        $this->info('👁️  Step 0: Running Live Monitor...');
+
+        $monitor = new LiveMonitorService();
+        $result = $monitor->monitor();
+
+        $this->report['monitor'] = $result;
+
+        $moduleCount = count($result['modules']);
+        $this->success("✓ Detected {$moduleCount} modules");
+        $this->newLine();
+    }
+
+    /**
+     * Step 3.5: Layout Merger
+     */
+    protected function step3HalfLayoutMerger(): void
+    {
+        $this->info('🎨 Step 3.5: Merging layout, CSS, and JS...');
+
+        $modules = $this->report['monitor']['modules'] ?? [];
+        $merger = new LayoutMergerService();
+        $result = $merger->merge($modules);
+
+        $this->report['layout_merger'] = $result;
+
+        $this->info("   • Layout merged: {$result['layout_merged']}");
+        $this->info("   • CSS merged: {$result['css_merged']}");
+        $this->info("   • JS merged: {$result['js_merged']}");
+        $this->success('✓ Layout merge completed');
+        $this->newLine();
+    }
+
+    /**
+     * Step 3.6: Menu Updater
+     */
+    protected function step3SixMenuUpdater(): void
+    {
+        $this->info('📋 Step 3.6: Updating menu/navigation...');
+
+        $modules = $this->report['monitor']['modules'] ?? [];
+        $updater = new MenuUpdaterService();
+        $result = $updater->updateMenu($modules);
+
+        $this->report['menu_updater'] = $result;
+
+        $this->info("   • Modules added to menu: {$result['modules_added']}");
+        $this->success('✓ Menu update completed');
         $this->newLine();
     }
 
